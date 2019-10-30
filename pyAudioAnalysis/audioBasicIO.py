@@ -63,24 +63,24 @@ def convertFsDirWavToWav(dirName, Fs, nC):
         print(command)
         os.system(command)
 
-def readAudioFile(path):
+def readAudioFile(path, **kwargs):
     '''
     This function returns a numpy array that stores the audio samples of a specified WAV of AIFF file
     '''
-    extension = os.path.splitext(path)[1]
+    extension = kwargs.get('extension', os.path.splitext(path)[1].lower())
 
     try:
-        #if extension.lower() == '.wav':
+        #if extension == '.wav':
             #[Fs, x] = wavfile.read(path)
-        if extension.lower() == '.aif' or extension.lower() == '.aiff':
+        if extension in ['.aif', '.aiff']:
             s = aifc.open(path, 'r')
             nframes = s.getnframes()
             strsig = s.readframes(nframes)
             x = numpy.fromstring(strsig, numpy.short).byteswap()
             Fs = s.getframerate()
-        elif extension.lower() == '.mp3' or extension.lower() == '.wav' or extension.lower() == '.au' or extension.lower() == '.ogg':            
+        else:
             try:
-                audiofile = AudioSegment.from_file(path)
+                audiofile = AudioSegment.from_file(path, **kwargs)
             #except pydub.exceptions.CouldntDecodeError:
             except:
                 print("Error: file not found or other I/O error. "
@@ -98,9 +98,6 @@ def readAudioFile(path):
             for chn in list(range(audiofile.channels)):
                 x.append(data[chn::audiofile.channels])
             x = numpy.array(x).T
-        else:
-            print("Error in readAudioFile(): Unknown file type!")
-            return (-1,-1)
     except IOError: 
         print("Error: file not found or other I/O error.")
         return (-1,-1)
